@@ -3,6 +3,11 @@
 import React from 'react';
 import $ from 'jquery';
 import Button from './Button.react';
+import Actions from '../Actions';
+import contactStore from '../stores/contactStore';
+import reactMixin from 'react-mixin';
+import {listenTo} from 'reflux';
+
 
 /**
  * Styled Button component. 
@@ -11,15 +16,12 @@ export default class EditContactPanel extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      contact: {},
-      firstName: '',
-      lastName: '', 
-      email: ''
+      contact: {}
     }
     this.handleFName = this.handleFName.bind(this);
     this.handleLName = this.handleLName.bind(this);
     this.handleEmail = this.handleEmail.bind(this);
-    this.getContact = this.getContact.bind(this);
+    this.onChange = this.onChange.bind(this);
     this.updatedContact = this.updatedContact.bind(this);
     this.editContact = this.editContact.bind(this);
   }
@@ -30,7 +32,11 @@ export default class EditContactPanel extends React.Component {
    */
   handleFName(event) {
     this.setState({
-      firstName: event.target.value
+      contact: {
+        firstName: event.target.value,
+        lastName: this.state.contact.lastName,
+        email:this.state.contact.email
+      }
     });
   }
 
@@ -40,7 +46,11 @@ export default class EditContactPanel extends React.Component {
    */
   handleLName(event) {
     this.setState({
-      lastName: event.target.value
+      contact: {
+        firstName: this.state.contact.firstName,
+        lastName: event.target.value,
+        email:this.state.contact.email
+      }
     });
   }
 
@@ -50,7 +60,11 @@ export default class EditContactPanel extends React.Component {
    */
   handleEmail(event) {
     this.setState({
-      email: event.target.value
+      contact: {
+        firstName: this.state.contact.firstName,
+        lastName: this.state.contact.lastName,
+        email: event.target.value
+      }
     });
   }
 
@@ -61,18 +75,13 @@ export default class EditContactPanel extends React.Component {
   editContact(e) {
     e.preventDefault();
     var updates = this.updatedContact();
-    $.ajax({
-      url: '/api/contacts/',
-      type: 'PUT',
-      dataType: 'json',
-      data: updates,
-      success: (data) => {
-        console.log('update was performed.');
-      },
-      error: (xhr, status, error) => {
-        console.log(xhr);
-      }
-    });
+    Actions.editContact(updates);
+  }
+
+  onChange(event, contact) {
+    this.setState({
+      contact
+    })
   }
 
   /**
@@ -86,42 +95,21 @@ export default class EditContactPanel extends React.Component {
       contact: {}
     };
     if (this.state.firstName != '') {
-      upContact.contact.firstName = this.state.firstName;
+      upContact.contact.firstName = this.state.contact.firstName;
     }
     if (this.state.lastName != '') {
-      upContact.contact.lastName = this.state.lastName;
+      upContact.contact.lastName = this.state.contact.lastName;
     }
     if (this.state.email != '') {
-      upContact.contact.email = this.state.email;
+      upContact.contact.email = this.state.contact.email;
     }
 
     return upContact;
   }
 
-  /**
-   * Grabs the specific contact from the given id (this.props.params.id). Sets it to 
-   * this.state.contact
-   */
-  getContact() {
-    $.ajax({
-      url: '/api/contacts/' + this.props.params.id,
-      type: 'GET',
-      dataType: 'json',
-      success: (res) => {
-        this.setState({
-          contact: res
-        });
-        console.log('get was performed for id: ' + this.state.contact.id);
-      },
-      error: (xhr, status, error) => {
-        console.log(xhr);
-      }
-    });
-  }
-
   componentDidMount() {
     var id = this.props.params.id;
-    this.getContact(id);
+    Actions.grabContact(id);
   }
 
   render() {
@@ -129,11 +117,11 @@ export default class EditContactPanel extends React.Component {
       <div>
         <p> This is my edit contact component. </p>
         <form>
-            <p> <input type='text' placeholder={this.state.contact.firstName || ''} onChange={this.handleFName}/>
+            <p> <input type='text' value={this.state.contact.firstName} onChange={this.handleFName}/>
             Change first name. </p>
-            <p> <input type='text' placeholder={this.state.contact.lastName || ''} onChange={this.handleLName}/>
+            <p> <input type='text' value={this.state.contact.lastName} onChange={this.handleLName}/>
             Change last name. </p>
-            <p> <input type='text' placeholder={this.state.contact.email || ''} onChange={this.handleEmail}/>
+            <p> <input type='text' value={this.state.contact.email} onChange={this.handleEmail}/>
             Change email. </p>
             <button type = 'submit' onClick={this.editContact} > Update Contact </button>
             <Button linkName='addressbook' buttonName='Return to Contacts' />
@@ -142,3 +130,5 @@ export default class EditContactPanel extends React.Component {
     );
   }
 }
+
+reactMixin(EditContactPanel.prototype, listenTo(contactStore, 'onChange'));

@@ -4,6 +4,10 @@ import React from 'react';
 import $ from 'jquery';
 import Button from './Button.react';
 import Contact from './Contact.react';
+import Actions from '../Actions';
+import contactStore from '../stores/contactStore';
+import reactMixin from 'react-mixin';
+import {listenTo} from 'reflux';
 
 /**
  * Styled Button component. 
@@ -15,8 +19,9 @@ export default class AddressBook extends React.Component {
     this.state = {
       contacts: []
     }
-    this.getContacts = this.getContacts.bind(this);
+    // this.getContacts = this.getContacts.bind(this);
     this.delContact = this.delContact.bind(this);
+    this.onChange = this.onChange.bind(this);
   }
 
   /**
@@ -24,34 +29,14 @@ export default class AddressBook extends React.Component {
    */
   delContact(id, e) {
     e.preventDefault();
-    $.ajax({
-      url: '/api/contacts/' + id,
-      type: 'DELETE',
-      dataType: 'json',
-      success: (data) => {
-        console.log('delete was performed.' + id);
-      },
-      error: (xhr, status, error) => {
-        console.log(xhr);
-      }
-    });
-    this.getContacts();
+    Actions.deleteContact(id);
   }
 
   /**
    * Grabs the contacts from the server, and saves it to contacts in state object.
-   */
-  getContacts() {
-    $.ajax({
-      url: '/api/contacts',
-      type: 'GET',
-      dataType: 'json',
-      success: (res) => {
-        this.setState({
-          contacts: res
-        });
-      }
-    });
+   */  
+  onChange(event, contacts) {
+    this.setState({ contacts });// ES6 short cut for contacts: contacts
   }
 
   /**
@@ -59,7 +44,7 @@ export default class AddressBook extends React.Component {
    * Note to self: this happens before render, and only once its run
    */
   componentDidMount() {
-    this.getContacts();
+    Actions.grabContacts();
   }
 
   render() {
@@ -84,3 +69,5 @@ export default class AddressBook extends React.Component {
     );
   }
 }
+
+reactMixin(AddressBook.prototype, listenTo(contactStore, 'onChange'));

@@ -4,6 +4,10 @@ import React from 'react';
 import $ from 'jquery';
 import {Link} from 'react-router';
 import Button from './Button.react';
+import Actions from '../Actions';
+// import contactStore from '../stores/contactStore';
+// import reactMixin from 'react-mixin';
+// import {listenTo} from 'reflux';
 
 /**
  * Address book class.
@@ -21,7 +25,6 @@ export default class AddContactPanel extends React.Component {
     this.handleLName = this.handleLName.bind(this);
     this.handleEmail = this.handleEmail.bind(this);
     this.submitClick = this.submitClick.bind(this);
-    this.addContact = this.addContact.bind(this);
   }
 
   // must be a better way of handling instead of handling them all separate
@@ -71,7 +74,7 @@ export default class AddContactPanel extends React.Component {
           lastName: this.state.curLastName,
           email: this.state.curEmail
       };
-      this.addContact(newContact);
+      Actions.addContact(newContact);
     } else {
       console.log('form not filled correctly');
       // make something pop up letting user know it errors
@@ -100,17 +103,6 @@ export default class AddContactPanel extends React.Component {
    * Makes the POST request to add contact to server.
    * @param Contact object.
    */
-  addContact(contact) {
-    $.ajax({
-      url:'/api/contacts',
-      type: 'POST',
-      dataType: 'json',
-      data: contact,
-      success: function(data) {
-        console.log('post was performed.');
-      }
-    });
-  }
 
   /**
    * Validates if passed in string is in correct email format. Found online.
@@ -126,11 +118,11 @@ export default class AddContactPanel extends React.Component {
     return (
       <div>
         <form>
-            <p> <input type='text' name={this.props.firstName} placeholder={this.props.firstName} onChange={this.handleFName}/>
+            <p> <input type='text' placeholder={this.props.firstName} onChange={this.handleFName}/>
             Must include first name. </p>
-            <p> <input type='text' name={this.props.lastName} placeholder={this.props.lastName} onChange={this.handleLName}/>
+            <p> <input type='text' placeholder={this.props.lastName} onChange={this.handleLName}/>
             Must include last name. </p>
-            <p> <input type='email' name={this.props.email} placeholder={this.props.email} onChange={this.handleEmail}/>
+            <p> <input type='email' placeholder={this.props.email} onChange={this.handleEmail}/>
             Must include a valid email. </p>
             <button type = 'submit' onClick={this.submitClick}> Submit </button>
             <Button linkName='addressbook' buttonName='Return to Contacts' />
@@ -140,6 +132,8 @@ export default class AddContactPanel extends React.Component {
   }
 
 }
+
+// reactMixin(AddContactPanel.prototype, listenTo(contactStore, 'onChange'));
 
 // issue of make mistake spelling then go fix it and press submit again, it won't update
 // error cases not working properly

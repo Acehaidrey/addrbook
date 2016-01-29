@@ -75,16 +75,14 @@ app.del('/api/contacts/:id', function(req, res) {
         i;
 
     for (i = 0; i < contacts.length; i++) {
-
         if (contacts[i].id === id){
 
             contacts.splice(i, 1);
 
-            res.send(true);
+            res.send(contacts);
             break;
         }
     }
-
     res.send(false);
 });
 
